@@ -7,6 +7,8 @@
 
 typedef char *sds;
 
+//倘若使用指针char buf*, 分配内存需要两个步骤，一次分配结构体，一次分配char *buf
+//buf[]使得整个结构的内存模型连续
 struct sdshdr {
     int len;     //buf中已占用空间的长度
     int free;    //buf中剩余可用空间的长度
