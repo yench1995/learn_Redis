@@ -41,7 +41,7 @@
 /* 默认的服务器配置值 */
 #define REDIS_DEFAULT_HZ        10      /* Time interrupt calls/sec. */
 #define REDIS_MIN_HZ            1
-#define REDIS_MAX_HZ            500 
+#define REDIS_MAX_HZ            500
 #define REDIS_SERVERPORT        6379    /* TCP port */
 #define REDIS_TCP_BACKLOG       511     /* TCP listen backlog */
 #define REDIS_MAXIDLETIME       0       /* default client timeout: infinite */
@@ -412,6 +412,7 @@ typedef struct redisObject {
  * greater idle times to the right (ascending order).
  *
  * Empty entries have the key pointer set to NULL. */
+//驱逐池
 #define REDIS_EVICTION_POOL_SIZE 16
 struct evictionPoolEntry {
     unsigned long long idle;    /* Object idle time. */
@@ -427,7 +428,7 @@ typedef struct redisDb {
     dict *dict;                 /* The keyspace for this DB */
 
     // 键的过期时间，字典的键为键，字典的值为过期事件 UNIX 时间戳
-    dict *expires;              /* Timeout of keys with a timeout set */
+    dict* expires;              /* Timeout of keys with a timeout set */
 
     // 正处于阻塞状态的键
     dict *blocking_keys;        /* Keys with clients waiting for data (BLPOP) */
@@ -605,7 +606,7 @@ typedef struct redisClient {
     off_t repldboff;        /* replication DB file offset */
     // 主服务器传来的 RDB 文件的大小
     off_t repldbsize;       /* replication DB file size */
-    
+
     sds replpreamble;       /* replication DB preamble. */
 
     // 主服务器的复制偏移量
@@ -761,7 +762,7 @@ extern clientBufferLimitsConfig clientBufferLimitsDefaults[REDIS_CLIENT_LIMIT_NU
  * 它包含指向被执行命令的指针、命令的参数、数据库 ID 、传播目标（REDIS_PROPAGATE_*）。
  *
  * Currently only used to additionally propagate more commands to AOF/Replication
- * after the propagation of the executed command. 
+ * after the propagation of the executed command.
  *
  * 目前只用于在传播被执行命令之后，传播附加的其他命令到 AOF 或 Replication 中。
  */
@@ -1252,7 +1253,7 @@ struct redisServer {
 
     // Lua 环境
     lua_State *lua; /* The Lua interpreter. We use just one for all clients */
-    
+
     // 复制执行 Lua 脚本中的 Redis 命令的伪客户端
     redisClient *lua_client;   /* The "fake client" to query Redis from Lua */
 
