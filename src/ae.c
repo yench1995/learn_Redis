@@ -92,7 +92,7 @@ int aeGetSetSize(aeEventLoop *eventLoop) {
  * 如果尝试调整大小为 setsize ，但是有 >= setsize 的文件描述符存在
  * 那么返回 AE_ERR ，不进行任何动作。
  *
- * Otherwise AE_OK is returned and the operation is successful. 
+ * Otherwise AE_OK is returned and the operation is successful.
  *
  * 否则，执行大小调整操作，并返回 AE_OK 。
  */
@@ -325,7 +325,7 @@ int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id)
  *    Much better but still insertion or deletion of timers is O(N).
  * 2) Use a skiplist to have this operation as O(1) and insertion as O(log(N)).
  */
-// 寻找里目前时间最近的时间事件
+// 寻找离目前时间最近的时间事件
 // 因为链表是乱序的，所以查找复杂度为 O（N）
 static aeTimeEvent *aeSearchNearestTimer(aeEventLoop *eventLoop)
 {
@@ -385,7 +385,7 @@ static int processTimeEvents(aeEventLoop *eventLoop) {
             te = te->next;
             continue;
         }
-        
+
         // 获取当前时间
         aeGetTime(&now_sec, &now_ms);
 
@@ -460,7 +460,7 @@ static int processTimeEvents(aeEventLoop *eventLoop) {
  * 如果 flags 包含 AE_DONT_WAIT ，
  * 那么函数在处理完所有不许阻塞的事件之后，即刻返回。
  *
- * The function returns the number of events processed. 
+ * The function returns the number of events processed.
  * 函数的返回值为已处理事件的数量
  */
 int aeProcessEvents(aeEventLoop *eventLoop, int flags)
@@ -506,7 +506,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
             if (tvp->tv_sec < 0) tvp->tv_sec = 0;
             if (tvp->tv_usec < 0) tvp->tv_usec = 0;
         } else {
-            
+
             // 执行到这一步，说明没有时间事件
             // 那么根据 AE_DONT_WAIT 是否设置来决定是否阻塞，以及阻塞的时间长度
 
@@ -562,7 +562,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
 }
 
 /* Wait for milliseconds until the given file descriptor becomes
- * writable/readable/exception 
+ * writable/readable/exception
  *
  * 在给定毫秒内等待，直到 fd 变成可写、可读或异常
  */
