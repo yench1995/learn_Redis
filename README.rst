@@ -1,7 +1,8 @@
 Redis 3.0 源码注释
 ============================
 
-本项目是个人在学习Redis源码的过程中，借鉴黄健宏（huangz）老师的Redis注释项目（项目地址：https://github.com/huangz1990/redis-3.0-annotated）所完成并添加了一些自己的理解所完成。
+本项目是个人在学习Redis源码的过程中，借鉴黄健宏（huangz）老师的Redis注释项目（项目地址：https://github.com/huangz1990/redis-3.0-annotated）所完成并添加了一些自己的理解所完成。  
+
 附录：各个源码文件的作用简介
 ------------------------------
 
