@@ -1,21 +1,14 @@
-
 #include "redis.h"
 #include <sys/uio.h>
 #include <math.h>
 
 static void setProtocolError(redisClient *c, int pos);
 
-/* To evaluate the output buffer size of a client we need to get size of
- * allocated objects, however we can't used zmalloc_size() directly on sds
- * strings because of the trick they use to work (the header is before the
- * returned pointer), so we use this helper function. */
-// 计算输出缓冲区的大小 
+// 计算输出缓冲区的大小
 size_t zmalloc_size_sds(sds s) {
     return zmalloc_size(s-sizeof(struct sdshdr));
 }
 
-/* Return the amount of memory used by the sds string at object->ptr
- * for a string object. */
 // 返回 object->ptr 所指向的字符串对象所使用的内存数量。
 size_t getStringObjectSdsUsedMemory(robj *o) {
     redisAssertWithInfo(NULL,o,o->type == REDIS_STRING);
@@ -49,10 +42,6 @@ redisClient *createClient(int fd) {
     // 分配空间
     redisClient *c = zmalloc(sizeof(redisClient));
 
-    /* passing -1 as fd it is possible to create a non connected client.
-     * This is useful since all the Redis commands needs to be executed
-     * in the context of a client. When commands are executed in other
-     * contexts (for instance a Lua script) we need a non connected client. */
     // 当 fd 不为 -1 时，创建带网络连接的客户端
     // 如果 fd 为 -1 ，那么创建无网络连接的伪客户端
     // 因为 Redis 的命令必须在客户端的上下文中使用，所以在执行 Lua 环境中的命令时
@@ -181,7 +170,7 @@ redisClient *createClient(int fd) {
  *
  * Typically gets called every time a reply is built, before adding more
  * data to the clients output buffers. If the function returns REDIS_ERR no
- * data should be appended to the output buffers. 
+ * data should be appended to the output buffers.
  *
  * 通常在每个回复被创建时调用，如果函数返回 REDIS_ERR ，
  * 那么没有数据会被追加到输出缓冲区。
@@ -190,7 +179,7 @@ int prepareClientToWrite(redisClient *c) {
 
     // LUA 脚本环境所使用的伪客户端总是可写的
     if (c->flags & REDIS_LUA_CLIENT) return REDIS_OK;
-    
+
     // 客户端是主服务器并且不接受查询，
     // 那么它是不可写的，出错
     if ((c->flags & REDIS_MASTER) &&
@@ -389,7 +378,7 @@ void addReply(redisClient *c, robj *obj) {
      *
      * If the encoding is RAW and there is room in the static buffer
      * we'll be able to send the object to the client without
-     * messing with its page. 
+     * messing with its page.
      *
      * 如果对象的编码为 RAW ，并且静态缓冲区中有空间
      * 那么就可以在不弄乱内存页的情况下，将对象发送给客户端。
@@ -570,10 +559,10 @@ void addReplyDouble(redisClient *c, double d) {
 }
 
 /* Add a long long as integer reply or bulk len / multi bulk count.
- * 
+ *
  * 添加一个 long long 为整数回复，或者 bulk 或 multi bulk 的数目
  *
- * Basically this is used to output <prefix><long long><crlf>. 
+ * Basically this is used to output <prefix><long long><crlf>.
  *
  * 输出格式为 <prefix><long long><crlf>
  *
@@ -609,7 +598,7 @@ void addReplyLongLongWithPrefix(redisClient *c, long long ll, char prefix) {
 
 /*
  * 返回一个整数回复
- * 
+ *
  * 格式为 :10086\r\n
  */
 void addReplyLongLong(redisClient *c, long long ll) {
@@ -654,7 +643,7 @@ void addReplyBulkLen(redisClient *c, robj *obj) {
         addReplyLongLongWithPrefix(c,len,'$');
 }
 
-/* Add a Redis Object as a bulk reply 
+/* Add a Redis Object as a bulk reply
  *
  * 返回一个 Redis 对象作为回复
  */
@@ -664,7 +653,7 @@ void addReplyBulk(redisClient *c, robj *obj) {
     addReply(c,shared.crlf);
 }
 
-/* Add a C buffer as bulk reply 
+/* Add a C buffer as bulk reply
  *
  * 返回一个 C 缓冲区作为回复
  */
@@ -674,7 +663,7 @@ void addReplyBulkCBuffer(redisClient *c, void *p, size_t len) {
     addReply(c,shared.crlf);
 }
 
-/* Add a C nul term string as bulk reply 
+/* Add a C nul term string as bulk reply
  *
  * 返回一个 C 字符串作为回复
  */
@@ -686,7 +675,7 @@ void addReplyBulkCString(redisClient *c, char *s) {
     }
 }
 
-/* Add a long long as a bulk reply 
+/* Add a long long as a bulk reply
  *
  * 返回一个 long long 值作为回复
  */
@@ -760,7 +749,7 @@ static void acceptCommonHandler(int fd, int flags) {
     c->flags |= flags;
 }
 
-/* 
+/*
  * 创建一个 TCP 连接处理器
  */
 void acceptTcpHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
@@ -845,7 +834,7 @@ void replicationHandleMasterDisconnection(void) {
      * 等待载入新数据。
      *
      * If server.masterhost is NULL the user called SLAVEOF NO ONE so
-     * slave resync is not needed. 
+     * slave resync is not needed.
      *
      * 如果 masterhost 不存在（怎么会这样呢？）
      * 那么调用 SLAVEOF NO ONE ，避免 slave resync
@@ -997,7 +986,7 @@ void freeClientAsync(redisClient *c) {
 
 // 关闭需要异步关闭的客户端
 void freeClientsInAsyncFreeQueue(void) {
-    
+
     // 遍历所有要关闭的客户端
     while (listLength(server.clients_to_close)) {
         listNode *ln = listFirst(server.clients_to_close);
@@ -1096,7 +1085,7 @@ void sendReplyToClient(aeEventLoop *el, int fd, void *privdata, int mask) {
          * 剩余的内容等下次写入就绪再继续写入
          *
          * However if we are over the maxmemory limit we ignore that and
-         * just deliver as much data as it is possible to deliver. 
+         * just deliver as much data as it is possible to deliver.
          *
          * 不过，如果服务器的内存占用已经超过了限制，
          * 那么为了将回复缓冲区中的内容尽快写入给客户端，
@@ -1261,7 +1250,7 @@ static void setProtocolError(redisClient *c, int pos) {
 
 /*
  * 将 c->querybuf 中的协议内容转换成 c->argv 中的参数对象
- * 
+ *
  * 比如 *3\r\n$3\r\nSET\r\n$3\r\nMSG\r\n$5\r\nHELLO\r\n
  * 将被转换为：
  * argv[0] = SET
@@ -1377,7 +1366,7 @@ int processMultibulkBuffer(redisClient *c) {
             }
 
             // 定位到参数的开头
-            // 比如 
+            // 比如
             // $3\r\nSET\r\n...
             //       ^
             //       |
@@ -1411,7 +1400,7 @@ int processMultibulkBuffer(redisClient *c) {
             /* Not enough data (+2 == trailing \r\n) */
             break;
         } else {
-            // 为参数创建字符串对象  
+            // 为参数创建字符串对象
             /* Optimization: if the buffer contains JUST our bulk element
              * instead of creating a new object by *copying* the sds we
              * just use the current sds string. */
@@ -1526,7 +1515,7 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     // 设置服务器的当前客户端
     server.current_client = c;
-    
+
     // 读入长度（默认为 16 MB）
     readlen = REDIS_IOBUF_LEN;
 
@@ -1848,7 +1837,7 @@ void rewriteClientCommandVector(redisClient *c, int argc, ...) {
     va_start(ap,argc);
     for (j = 0; j < argc; j++) {
         robj *a;
-        
+
         a = va_arg(ap, robj*);
         argv[j] = a;
         incrRefCount(a);
@@ -1874,7 +1863,7 @@ void rewriteClientCommandVector(redisClient *c, int argc, ...) {
 // 修改单个参数
 void rewriteClientCommandArgument(redisClient *c, int i, robj *newval) {
     robj *oldval;
-   
+
     redisAssertWithInfo(c,NULL,i < c->argc);
     oldval = c->argv[i];
     c->argv[i] = newval;
@@ -1907,7 +1896,7 @@ void rewriteClientCommandArgument(redisClient *c, int i, robj *newval) {
  *
  * Note: this function is very fast so can be called as many time as
  * the caller wishes. The main usage of this function currently is
- * enforcing the client output length limits. 
+ * enforcing the client output length limits.
  *
  * 注意：这个函数的速度很快，所以它可以被随意地调用多次。
  * 这个函数目前的主要作用就是用来强制客户端输出长度限制。
@@ -1924,7 +1913,7 @@ unsigned long getClientOutputBufferMemoryUsage(redisClient *c) {
  * 获取客户端的类型，用于对不同类型的客户端应用不同的限制。
  *
  * The function will return one of the following:
- * 
+ *
  * 函数将返回以下三个值的其中一个：
  *
  * REDIS_CLIENT_LIMIT_CLASS_NORMAL -> Normal client
@@ -1969,7 +1958,7 @@ char *getClientLimitClassName(int class) {
  * 并在到达软限制时，对客户端进行标记。
  *
  * Return value: non-zero if the client reached the soft or the hard limit.
- *               Otherwise zero is returned. 
+ *               Otherwise zero is returned.
  *
  * 返回值：到达软性限制或者硬性限制时，返回非 0 值。
  *         否则返回 0 。
@@ -2036,11 +2025,11 @@ int checkClientOutputBufferLimits(redisClient *c) {
  *
  * Note: we need to close the client asynchronously because this function is
  * called from contexts where the client can't be freed safely, i.e. from the
- * lower level functions pushing data inside the client output buffers. 
+ * lower level functions pushing data inside the client output buffers.
  *
  * 注意：
  * 我们不能直接关闭客户端，而要异步关闭的原因是客户端正处于一个不能被安全地关闭的上下文中。
- * 比如说，可能有底层函数正在推入数据到客户端的输出缓冲区里面。      
+ * 比如说，可能有底层函数正在推入数据到客户端的输出缓冲区里面。
  */
 void asyncCloseClientOnOutputBufferLimitReached(redisClient *c) {
     redisAssert(c->reply_bytes < ULONG_MAX-(1024*64));
