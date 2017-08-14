@@ -146,31 +146,17 @@ redisClient *createClient(int fd) {
     return c;
 }
 
-/* This function is called every time we are going to transmit new data
- * to the client. The behavior is the following:
- *
+/*
  * 这个函数在每次向客户端发送数据时都会被调用。函数的行为如下：
- *
- * If the client should receive new data (normal clients will) the function
- * returns REDIS_OK, and make sure to install the write handler in our event
- * loop so that when the socket is writable new data gets written.
  *
  * 当客户端可以接收新数据时（通常情况下都是这样），函数返回 REDIS_OK ，
  * 并将写处理器（write handler）安装到事件循环中，
  * 这样当套接字可写时，新数据就会被写入。
  *
- * If the client should not receive new data, because it is a fake client,
- * a master, a slave not yet online, or because the setup of the write handler
- * failed, the function returns REDIS_ERR.
- *
  * 对于那些不应该接收新数据的客户端，
  * 比如伪客户端、 master 以及 未 ONLINE 的 slave ，
  * 或者写处理器安装失败时，
  * 函数返回 REDIS_ERR 。
- *
- * Typically gets called every time a reply is built, before adding more
- * data to the clients output buffers. If the function returns REDIS_ERR no
- * data should be appended to the output buffers.
  *
  * 通常在每个回复被创建时调用，如果函数返回 REDIS_ERR ，
  * 那么没有数据会被追加到输出缓冲区。
@@ -198,9 +184,7 @@ int prepareClientToWrite(redisClient *c) {
     return REDIS_OK;
 }
 
-/* Create a duplicate of the last object in the reply list when
- * it is not exclusively owned by the reply list. */
-// 当回复列表中的最后一个对象并非属于回复的一部分时
+// 当回复列表中的最后一个对象并非只属于回复的一部分时
 // 创建该对象的一个复制品
 robj *dupLastObjectIfNeeded(list *reply) {
     robj *new, *cur;
@@ -258,10 +242,10 @@ void _addReplyObjectToList(redisClient *c, robj *o) {
     if (listLength(c->reply) == 0) {
         incrRefCount(o);
         listAddNodeTail(c->reply,o);
+        c->reply_bytes += getStringObjectSdsUsedMemory(o);
 
         // 链表中已有缓冲块，尝试将回复添加到块内
         // 如果当前的块不能容纳回复的话，那么新建一个块
-        c->reply_bytes += getStringObjectSdsUsedMemory(o);
     } else {
 
         // 取出表尾的 SDS
@@ -292,8 +276,6 @@ void _addReplyObjectToList(redisClient *c, robj *o) {
     asyncCloseClientOnOutputBufferLimitReached(c);
 }
 
-/* This method takes responsibility over the sds. When it is no longer
- * needed it will be free'd, otherwise it ends up in a robj. */
 // 和 _addReplyObjectToList 类似，但会负责 SDS 的释放功能（如果需要的话）
 void _addReplySdsToList(redisClient *c, sds s) {
     robj *tail;
@@ -1207,7 +1189,7 @@ int processInlineBuffer(redisClient *c) {
 
     /* Leave data after the first line of the query in the buffer */
 
-    // 从缓冲区中删除已 argv 已读取的内容
+    // 从缓冲区中删除 argv 已读取的内容
     // 剩余的内容是未读取的
     sdsrange(c->querybuf,querylen+2,-1);
 

@@ -18,7 +18,7 @@
 #include "anet.h"
 
 
-*
+/*
  * 打印错误信息
  */
 static void anetSetError(char *err, const char *fmt, ...)
@@ -126,7 +126,7 @@ int anetEnableTcpNoDelay(char *err, int fd)
 /*
  * 启用 Nagle 算法
  */
-int anetDisableTcpNoDelay(char *err, int fd) 
+int anetDisableTcpNoDelay(char *err, int fd)
 {
     return anetSetTcpNoDelay(err, fd, 0);
 }
