@@ -44,7 +44,7 @@
  */
 struct aeEventLoop;
 
-/* Types and data structures 
+/* Types and data structures
  *
  * 事件接口
  */
@@ -118,7 +118,7 @@ typedef struct aeFiredEvent {
 
 } aeFiredEvent;
 
-/* State of an event based program 
+/* State of an event based program
  *
  * 事件处理器的状态
  */
